@@ -1,8 +1,8 @@
 package core
 
 import (
-	b3 "github.com/magicsea/behavior3go"
-	. "github.com/magicsea/behavior3go/config"
+	b3 "behavior3go"
+	. "behavior3go/config"
 )
 
 type IAction interface {
