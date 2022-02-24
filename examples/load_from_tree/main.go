@@ -4,16 +4,16 @@
 package main
 
 import (
-	"fmt"
 	b3 "behavior3go"
 	. "behavior3go/config"
 	. "behavior3go/core"
 	. "behavior3go/examples/share"
 	. "behavior3go/loader"
+	"fmt"
 )
 
 func main() {
-	treeConfig, ok := LoadTreeCfg("tree.json")
+	treeConfig, ok := LoadTreeCfg("examples/load_from_tree/tree.json")
 	if !ok {
 		fmt.Println("LoadTreeCfg err")
 		return

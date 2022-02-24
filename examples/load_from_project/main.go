@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	projectConfig, ok := LoadProjectCfg("project.json")
+	projectConfig, ok := LoadProjectCfg("examples/load_from_project/project.json")
 	if !ok {
 		fmt.Println("LoadTreeCfg err")
 		return

@@ -36,7 +36,7 @@ func init() {
 }
 
 func main() {
-	projectConfig, ok := LoadRawProjectCfg("memsubtree.b3")
+	projectConfig, ok := LoadRawProjectCfg("examples/memsubtree/memsubtree.b3")
 	if !ok {
 		fmt.Println("LoadRawProjectCfg err")
 		return

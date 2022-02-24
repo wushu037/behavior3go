@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 //原生工程json类型
@@ -14,10 +15,16 @@ type RawProjectCfg struct {
 }
 
 //加载原生工程
-func LoadRawProjectCfg(path string) (*RawProjectCfg, bool) {
+func LoadRawProjectCfg(relativePath string) (*RawProjectCfg, bool) {
+
+	wdPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	filePath := fmt.Sprintf("%s/%s", wdPath, relativePath)
 
 	var project RawProjectCfg
-	file, err := ioutil.ReadFile(path)
+	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("LoadRawProjectCfg fail:", err)
 		return nil, false

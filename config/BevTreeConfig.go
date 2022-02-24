@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 //编辑器地址@http://editor.behavior3.com/#/editor
@@ -90,10 +91,16 @@ type BTTreeCfg struct {
 }
 
 //加载
-func LoadTreeCfg(path string) (*BTTreeCfg, bool) {
+func LoadTreeCfg(relativePath string) (*BTTreeCfg, bool) {
+
+	wdPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	filePath := fmt.Sprintf("%s/%s", wdPath, relativePath)
 
 	var tree BTTreeCfg
-	file, err := ioutil.ReadFile(path)
+	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println("fail:", err)
 		return nil, false

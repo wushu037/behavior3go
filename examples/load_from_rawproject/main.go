@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	projectConfig, ok := LoadRawProjectCfg("example.b3")
+	projectConfig, ok := LoadRawProjectCfg("examples/load_from_rawproject/example.b3")
 	if !ok {
 		fmt.Println("LoadRawProjectCfg err")
 		return
