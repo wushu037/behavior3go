@@ -24,13 +24,13 @@ type BTNodeCfg struct {
 func (this *BTNodeCfg) GetProperty(name string) float64 {
 	v, ok := this.Properties[name]
 	if !ok {
-		panic("GetProperty err ,no vlaue:" + name)
+		panic("GetProperty err ,no value:" + name)
 		return 0
 	}
 	f64, fok := v.(float64)
 	if !fok {
-		fmt.Println("GetProperty err ,format not fload64:", name, v)
-		panic("GetProperty err ,format not fload64:" + name)
+		fmt.Println("GetProperty err ,format not float64:", name, v)
+		panic("GetProperty err ,format not float64:" + name)
 		return 0
 	}
 	return f64

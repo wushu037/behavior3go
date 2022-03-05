@@ -4,12 +4,12 @@
 package main
 
 import (
-	"fmt"
 	b3 "behavior3go"
 	. "behavior3go/config"
 	. "behavior3go/core"
 	. "behavior3go/examples/share"
 	. "behavior3go/loader"
+	"fmt"
 	"sync"
 )
 
@@ -29,7 +29,7 @@ func init() {
 }
 
 func main() {
-	projectConfig, ok := LoadRawProjectCfg("example.b3")
+	projectConfig, ok := LoadRawProjectCfg("examples/subtree/example.b3")
 	if !ok {
 		fmt.Println("LoadRawProjectCfg err")
 		return

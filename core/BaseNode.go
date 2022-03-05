@@ -23,6 +23,7 @@ type IBaseNode interface {
 	GetCategory() string
 	Execute(tick *Tick) b3.Status
 	GetName() string
+	GetID() string
 	GetTitle() string
 	SetBaseNodeWorker(worker IBaseWorker)
 	GetBaseNodeWorker() IBaseWorker
@@ -51,71 +52,35 @@ type IBaseNode interface {
 **/
 type BaseNode struct {
 	IBaseWorker
-	/**
-	 * Node ID.
-	 * @property {string} id
-	 * @readonly
-	**/
+	// Node ID
 	id string
 
-	/**
-	 * Node name. Must be a unique identifier, preferable the same name of the
-	 * class. You have to set the node name in the prototype.
-	 *
-	 * @property {String} name
-	 * @readonly
-	**/
+	// Node name. Must be a unique identifier, preferable the same name of the
+	// class. You have to set the node name in the prototype.
 	name string
 
-	/**
-	 * Node category. Must be `b3.COMPOSITE`, `b3.DECORATOR`, `b3.ACTION` or
-	 * `b3.CONDITION`. This is defined automatically be inheriting the
-	 * correspondent class.
-	 *
-	 * @property {CONSTANT} category
-	 * @readonly
-	**/
+	// Node category. Must be `b3.COMPOSITE`, `b3.DECORATOR`, `b3.ACTION` or
+	// `b3.CONDITION`. This is defined automatically be inheriting the
+	// correspondent class.
 	category string
 
-	/**
-	 * Node title.
-	 * @property {String} title
-	 * @optional
-	 * @readonly
-	**/
+	// title
 	title string
 
-	/**
-	 * Node description.
-	 * @property {String} description
-	 * @optional
-	 * @readonly
-	**/
+	// Node description
 	description string
 
-	/**
-	 * A dictionary (key, value) describing the node parameters. Useful for
-	 * defining parameter values in the visual editor. Note: this is only
-	 * useful for nodes when loading trees from JSON files.
-	 *
-	 * **Deprecated since 0.2.0. This is too similar to the properties
-	 * attribute, thus, this attribute is deprecated in favor to
-	 * `properties`.**
-	 *
-	 * @property {Object} parameters
-	 * @deprecated since 0.2.0.
-	 * @readonly
-	**/
+	// A dictionary (key, value) describing the node parameters. Useful for
+	// defining parameter values in the visual editor. Note: this is only
+	// useful for nodes when loading trees from JSON files.
+	//
+	// Deprecated: since 0.2.0. This is too similar to the properties
+	// attribute, thus, this attribute is deprecated in favor to
+	// `properties`.
 	parameters map[string]interface{}
 
-	/**
-	 * A dictionary (key, value) describing the node properties. Useful for
-	 * defining custom variables inside the visual editor.
-	 *
-	 * @property properties
-	 * @type {Object}
-	 * @readonly
-	**/
+	// A dictionary (key, value) describing the node properties. Useful for
+	// defining custom variables inside the visual editor.
 	properties map[string]interface{}
 }
 
@@ -138,11 +103,7 @@ func (this *BaseNode) GetBaseNodeWorker() IBaseWorker {
 	return this.IBaseWorker
 }
 
-/**
- * Initialization method.
- * @method Initialize
- * @construCtor
-**/
+// nitialization method.
 func (this *BaseNode) Initialize(params *BTNodeCfg) {
 	//this.id = b3.CreateUUID()
 	//this.title       = this.title || this.name
@@ -186,6 +147,19 @@ func (this *BaseNode) GetTitle() string {
  * @return {Constant} The tick state.
  * @protected
 **/
+/**
+翻译：
+这是将tick信号传播到node的主要方法。
+此方法调用所有回调：`enter`、`open`、`tick`、`close` 和 `exit`。
+它仅在尚未open的情况下open一个节点。同样，此方法仅在节点返回的状态不同于 `b3.RUNNING` 时才close节点。
+@tick 一个tick实例
+@return tick状态
+
+open、close的解释：当一个节点正在执行或准备执行时，isOpen=true；否则isOpen=false
+- tick之前，执行_open() ： isOpen=true
+- tick后，如果不是running ： isOpen=false
+- Running状态的节点在执行完execute后：isOpen依然是true
+ */
 func (this *BaseNode) _execute(tick *Tick) b3.Status {
 	//fmt.Println("_execute :", this.title)
 	// ENTER
@@ -193,18 +167,23 @@ func (this *BaseNode) _execute(tick *Tick) b3.Status {
 
 	// OPEN
 	if !tick.Blackboard.GetBool("isOpen", tick.tree.id, this.id) {
+		// _open会将本节点的isOpen标记为true，并执行每个节点的Open方法
 		this._open(tick)
 	}
 
 	// TICK
+	// 执行节点的真正逻辑，返回运行的状态
 	var status = this._tick(tick)
 
 	// CLOSE
+	// 如果节点不是Running，则将节点的isOpen标记为false。
+	// 标记为false后，就不可再open()；_tick()会继续执行上次Running的节点
 	if status != b3.RUNNING {
 		this._close(tick)
 	}
 
 	// EXIT
+	// 节点执行完毕，目前内部并没有任何逻辑
 	this._exit(tick)
 
 	return status

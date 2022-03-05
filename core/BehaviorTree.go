@@ -70,46 +70,23 @@ import (
 **/
 type BehaviorTree struct {
 
-	/**
-	 * The tree id, must be unique. By default, created with `b3.createUUID`.
-	 * @property {String} id
-	 * @readOnly
-	**/
+	// The tree id, must be unique. By default, created with `b3.createUUID`.
 	id string
 
-	/**
-	 * The tree title.
-	 * @property {String} title
-	 * @readonly
-	**/
+	// The tree title
 	title string
 
-	/**
-	 * Description of the tree.
-	 * @property {String} description
-	 * @readonly
-	**/
+	// Description of the tree
 	description string
 
-	/**
-	 * A dictionary with (key-value) properties. Useful to define custom
-	 * variables in the visual editor.
-	 *
-	 * @property {Object} properties
-	 * @readonly
-	**/
+	// A dictionary with (key-value) properties. Useful to define custom
+	// variables in the visual editor.
 	properties map[string]interface{}
 
-	/**
-	 * The reference to the root node. Must be an instance of `b3.BaseNode`.
-	 * @property {BaseNode} root
-	**/
+	// The reference to the root node. Must be an instance of `b3.BaseNode`.
 	root IBaseNode
 
-	/**
-	 * The reference to the debug instance.
-	 * @property {Object} debug
-	**/
+	// The reference to the debug instance
 	debug interface{}
 
 	dumpInfo *config.BTTreeCfg
@@ -147,7 +124,7 @@ func (this *BehaviorTree) SetDebug(debug interface{}) {
 	this.debug = debug
 }
 
-func  (this *BehaviorTree) GetRoot() IBaseNode {
+func (this *BehaviorTree) GetRoot() IBaseNode {
 	return this.root
 }
 
@@ -188,52 +165,51 @@ func (this *BehaviorTree) Load(data *config.BTTreeCfg, maps *b3.RegisterStructMa
 
 	// Create the node list (without connection between them)
 
-	for id, s := range data.Nodes {
-		spec := &s
+	for id, nodeCfg := range data.Nodes {
 		var node IBaseNode
 
-		if spec.Category == "tree" {
+		if nodeCfg.Category == "tree" {
 			node = new(SubTree)
 		} else {
-			if extMaps != nil && extMaps.CheckElem(spec.Name) {
+			if extMaps != nil && extMaps.CheckElem(nodeCfg.Name) {
 				// Look for the name in custom nodes
-				if tnode, err := extMaps.New(spec.Name); err == nil {
+				if tnode, err := extMaps.New(nodeCfg.Name); err == nil {
 					node = tnode.(IBaseNode)
 				}
 			} else {
-				if tnode, err2 := maps.New(spec.Name); err2 == nil {
+				if tnode, err2 := maps.New(nodeCfg.Name); err2 == nil {
 					node = tnode.(IBaseNode)
 				} else {
-					//fmt.Println("new ", spec.Name, " err:", err2)
+					//fmt.Println("new ", nodeCfg.Name, " err:", err2)
 				}
 			}
 		}
 
 		if node == nil {
 			// Invalid node name
-			panic("BehaviorTree.load: Invalid node name:" + spec.Name + ",title:" + spec.Title)
+			panic("BehaviorTree.load: Invalid node name:" + nodeCfg.Name + ",title:" + nodeCfg.Title)
 
 		}
 
 		node.Ctor()
-		node.Initialize(spec)
+		node.Initialize(&nodeCfg)
 		node.SetBaseNodeWorker(node.(IBaseWorker))
 		nodes[id] = node
 	}
 
 	// Connect the nodes
-	for id, spec := range data.Nodes {
+	for id, nodeCfg := range data.Nodes {
 		node := nodes[id]
 
-		if node.GetCategory() == b3.COMPOSITE && spec.Children != nil {
-			for i := 0; i < len(spec.Children); i++ {
-				var cid = spec.Children[i]
+		if node.GetCategory() == b3.COMPOSITE && nodeCfg.Children != nil {
+			for i := 0; i < len(nodeCfg.Children); i++ {
+				var cid = nodeCfg.Children[i]
 				comp := node.(IComposite)
 				comp.AddChild(nodes[cid])
 			}
-		} else if node.GetCategory() == b3.DECORATOR && len(spec.Child) > 0 {
+		} else if node.GetCategory() == b3.DECORATOR && len(nodeCfg.Child) > 0 {
 			dec := node.(IDecorator)
-			dec.SetChild(nodes[spec.Child])
+			dec.SetChild(nodes[nodeCfg.Child])
 		}
 	}
 
@@ -251,6 +227,10 @@ func (this *BehaviorTree) Load(data *config.BTTreeCfg, maps *b3.RegisterStructMa
 **/
 func (this *BehaviorTree) dump() *config.BTTreeCfg {
 	return this.dumpInfo
+}
+
+func (this *BehaviorTree) Print() {
+	printNode(this.root, 0)
 }
 
 /**
@@ -274,50 +254,83 @@ func (this *BehaviorTree) dump() *config.BTTreeCfg {
  * @param {Object} target A target object.
  * @param {Blackboard} blackboard An instance of blackboard object.
  * @return {Constant} The tick signal state.
+ */
+/**
+翻译：
+从root开始在tree中传播tick信号。
+此方法接收任何类型的target对象（对象、数组、DOMElement等）和一个“黑板”实例。
+==target对象对于所有 Behavior3 组件根本没有用处，但对于自定义节点来说肯定很重要==
+blackboard被tree和node用来存储执行变量（例如，最后一个运行的节点），并且必须是“黑板”实例（或具有相同接口的对象）
+
+在内部，此方法创建一个 Tick 对象，该对象将存储target和blackboard对象。
+注意： BehaviorTree 存储了一个从最后一个tick开始的节点列表，如果这些节点在当前tick之后没有被调用，这个方法会自动关闭它们。
+
+@target：一个目标对象。
+@blackboard：一个黑板实例
+@return：滴答信号状态。
 **/
 func (this *BehaviorTree) Tick(target interface{}, blackboard *Blackboard) b3.Status {
 	if blackboard == nil {
 		panic("The blackboard parameter is obligatory and must be an instance of b3.Blackboard")
 	}
 
-	/* CREATE A TICK OBJECT */
+	// 创建tick对象
 	var tick = NewTick()
 	tick.debug = this.debug
 	tick.target = target
 	tick.Blackboard = blackboard
 	tick.tree = this
 
-	/* TICK NODE */
+	// 执行节点逻辑。内部会按照结构顺序，调用所有节点的execute
+	// 如果有running的节点
 	var state = this.root._execute(tick)
 
-	/* CLOSE NODES FROM LAST TICK, IF NEEDED */
-	var lastOpenNodes = blackboard._getTreeData(this.id).OpenNodes
+	// 关闭上一次tick的节点(如果需要)
+	// openNodes: 其实就是tick后处于running状态的节点；注意：一个节点处于running时，其父节点可能也处于running状态，或许会有一条"running"链
+	var lastOpenNodes = blackboard._getTreeData(this.id).OpenNodes // 上一次tick的openNodes
 	var currOpenNodes []IBaseNode
-	currOpenNodes = append(currOpenNodes, tick._openNodes...)
+	currOpenNodes = append(currOpenNodes, tick._openNodes...) // 本次tick的openNodes
 
-	// does not close if it is still open in this tick
-	var start = 0
+	// 如果在本次tick内仍处于open状态，则不会关闭
+	var start = 0 // 从第几个节点开始关闭
 	for i := 0; i < b3.MinInt(len(lastOpenNodes), len(currOpenNodes)); i++ {
 		start = i + 1
+		// 遍历本次和上次的running调用链，若存在状态不同的节点，则从这个节点之后的所有节点都要被关闭
 		if lastOpenNodes[i] != currOpenNodes[i] {
 			break
 		}
 	}
 
-	// close the nodes
+	// 关闭这个节点及其所有后续节点
 	for i := len(lastOpenNodes) - 1; i >= start; i-- {
+		node := lastOpenNodes[i]
+		// 打印节点及该节点是否已被关闭。会发现打印结果是有规律的，每次运行的打印结果都是固定的
+		fmt.Println(node)
+		fmt.Println("is-open:", tick.Blackboard.Get("isOpen", tick.tree.id, node.GetID()))
 		lastOpenNodes[i]._close(tick)
 	}
 
-	/* POPULATE BLACKBOARD */
+	// todo 可运行`memsubtree/main.go`触发以下逻辑进行分析
+	// 通过上面的打印分析得出：
+	//  类似这样的一个树结构：一个子树st被主树的两个分支a、b调用。
+	// 	若本次tick通过分支a进入st，上次tick通过分支b进入st
+	//  则上次tick造成的st中的running节点就要被关闭(running节点存在于openNodes中)。
+	//  这相当于为本次tick要用到st做了初始化
+	//  但这种初始化的方式或许欠妥(不适用于所有场景)：
+	// 		- 在主观上，引用子树就是相当于把子树的节点添加到主树中。子树起到的是对子树节点结构的封装作用
+	//		- 在本引擎中，分支a、b都引用了同一个子树st，但st内节点的状态在不同分支下却都是同一个(黑板通过nodeId存放数据，不同分支引用的st中的nodeID是一样的)
+	//		- 在常规需求中我们应该更想这样：a分支下的st节点和b分支下的st节点，应该是两套节点，他们的内存应该是分开的。可以给子树节点id依据分支加上不同的前缀
+	//
+	// 冗余的触发情况：本次tick没有openNodes，上次tick有，但上次tick的openNodes在本次tick运行时已经被正常close了，也会再触发这里的close，这显然是多余的
+
+
+	// 填充黑板数据
+	// 本次tick的openNodes保存到黑板中在下次tick时使用
 	blackboard._getTreeData(this.id).OpenNodes = currOpenNodes
+	// nodeCount：本次tick中，执行了_enter()的所有节点数量。没看到有什么用途
 	blackboard.SetTree("nodeCount", tick._nodeCount, this.id)
 
 	return state
-}
-
-func (this *BehaviorTree) Print() {
-	printNode(this.root, 0)
 }
 
 func printNode(root IBaseNode, blk int) {
