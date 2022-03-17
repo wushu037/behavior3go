@@ -20,57 +20,36 @@ import (
  *
  * @module b3
  * @class Tick
+翻译
+BehaviorTree会在每次tick中实例化一个新的Tick对象，它在遍历过程中作为参数通过树传递给节点。
+Tick类的作用是存储tree、debug、target和blackboard的实例。因此，所有节点都可以访问这些信息。
+对于内部使用，Tick 也可用于在 tick 信号之后存储打开的节点，以便让 `BehaviorTree` 跟踪并在必要时关闭它们。
+此类还在节点和调试之间架起了一座桥梁，如果提供了最后一个，则将节点状态传递给调试。
 **/
 type Tick struct {
-	/**
-	 * The tree reference.
-	 * @property {b3.BehaviorTree} tree
-	 * @readOnly
-	**/
+	// The tree reference.
 	tree *BehaviorTree
-	/**
-	 * The debug reference.
-	 * @property {Object} debug
-	 * @readOnly
-	 */
+	
+	// The debug reference.
 	debug interface{}
-	/**
-	 * The target object reference.
-	 * @property {Object} target
-	 * @readOnly
-	**/
+
+	// The target object reference.
 	target interface{}
-	/**
-	 * The blackboard reference.
-	 * @property {b3.Blackboard} blackboard
-	 * @readOnly
-	**/
+
+	// The blackboard reference
 	Blackboard *Blackboard
-	/**
-	 * The list of open nodes. Update during the tree traversal.
-	 * @property {Array} _openNodes
-	 * @protected
-	 * @readOnly
-	**/
+
+	// The list of open nodes. Update during the tree traversal
 	_openNodes []IBaseNode
 
-	/**
-	 * The list of open subtree node.
-	 * push subtree node before execute subtree.
-	 * pop subtree node after execute subtree.
-	**/
+	// The list of open subtree node.
+	// push subtree node before execute subtree.
+	// pop subtree node after execute subtree.
 	_openSubtreeNodes []*SubTree
 
-	/**
-	 * The number of nodes entered during the tick. Update during the tree
-	 * traversal.
-	 *
-	 * @property {Integer} _nodeCount
-	 * @protected
-	 * @readOnly
-	**/
+	// The number of nodes entered during the tick. Update during the tree
+	// traversal.
 	_nodeCount int
-
 }
 
 func NewTick() *Tick {
@@ -151,12 +130,12 @@ func (this *Tick) _closeNode(node *BaseNode) {
 
 }
 
-func (this *Tick) pushSubtreeNode(node *SubTree)  {
-	this._openSubtreeNodes = append(this._openSubtreeNodes,node)
+func (this *Tick) pushSubtreeNode(node *SubTree) {
+	this._openSubtreeNodes = append(this._openSubtreeNodes, node)
 }
-func (this *Tick) popSubtreeNode()  {
+func (this *Tick) popSubtreeNode() {
 	ulen := len(this._openSubtreeNodes)
-	if ulen>0 {
+	if ulen > 0 {
 		this._openSubtreeNodes = this._openSubtreeNodes[:ulen-1]
 	}
 }
@@ -168,7 +147,7 @@ func (this *Tick) popSubtreeNode()  {
 **/
 func (this *Tick) GetLastSubTree() *SubTree {
 	ulen := len(this._openSubtreeNodes)
-	if ulen>0 {
+	if ulen > 0 {
 		return this._openSubtreeNodes[ulen-1]
 	}
 	return nil

@@ -259,7 +259,7 @@ func (this *BehaviorTree) Print() {
 翻译：
 从root开始在tree中传播tick信号。
 此方法接收任何类型的target对象（对象、数组、DOMElement等）和一个“黑板”实例。
-==target对象对于所有 Behavior3 组件根本没有用处，但对于自定义节点来说肯定很重要==
+==target对象对于所有 Behavior3 组件根本没有用处，但对于自定义节点来说肯定很重要== (wushu:或许是一个类似于"上下文"、"拓展参数"的一个人参数)
 blackboard被tree和node用来存储执行变量（例如，最后一个运行的节点），并且必须是“黑板”实例（或具有相同接口的对象）
 
 在内部，此方法创建一个 Tick 对象，该对象将存储target和blackboard对象。

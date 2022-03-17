@@ -42,6 +42,35 @@ import (
  * @module b3
  * @class Blackboard
 **/
+/**
+翻译：
+Blackboard 是 `BehaviorTree` 及其节点所需的内存结构。
+它只有 2 个公共方法：`set` 和 `get`。这些方法适用于 3 种不同的上下文：全局、每棵树和每棵树的每个节点。
+假设您有两个不同的树用一个黑板控制一个对象，那么：
+- 在全局上下文中，所有节点都将访问存储的信息。
+- 在每个树上下文中，只有共享同一棵树的节点共享存储的信息。
+- 在每个节点每个树上下文中，存储在黑板上的信息只能由写入数据的同一节点访问。
+
+上下文是通过提供给这些方法的参数间接选择的，例如：
+ // 在全局上下文中访问变量
+ blackboard.set('testKey', 'value');
+ var value = blackboard.get('testKey');
+
+ // 在每个树上下文中访问变量
+ blackboard.set('testKey', 'value', tree.id);
+ var value = blackboard.get('testKey', tree.id);
+
+ // 在每个树上下文的每个节点中访问变量
+ blackboard.set('testKey', 'value', tree.id, node.id);
+ var value = blackboard.get('testKey', tree.id, node.id);
+
+注意：在内部，黑板将这些内存存储在不同的对象中
+全局的在 `_baseMemory` 上
+每棵树的在 `_treeMemory` 上
+每棵树的每个节点在`treeMemory`中通过 `_treeMemory[id ].nodeMemory`动态创建
+避免手动使用这些变量，而是使用 `get` 和 `set` 代替
+ */
+
 //------------------------TreeData-------------------------
 type TreeData struct {
 	NodeMemory     *Memory
@@ -103,6 +132,7 @@ func (this *Blackboard) Initialize() {
 /**
  * Internal method to retrieve the tree context memory. If the memory does
  * not exist, this method creates it.
+ * 翻译：检索树上下文内存的内部方法。如果内存不存在，则此方法创建它。
  *
  * @method _getTreeMemory
  * @param {string} treeScope The id of the tree in scope.
@@ -118,7 +148,8 @@ func (this *Blackboard) _getTreeMemory(treeScope string) *TreeMemory {
 
 /**
  * Internal method to retrieve the node context memory, given the tree
- * memory. If the memory does not exist, this method creates is.
+ * memory. If the memory does not exist, this method creates it.
+ * 翻译：给定树内存，检索节点上下文内存的内部方法。如果内存不存在，则此方法创建它。
  *
  * @method _getNodeMemory
  * @param {String} treeMemory the tree memory.
@@ -142,6 +173,11 @@ func (this *Blackboard) _getNodeMemory(treeMemory *TreeMemory, nodeScope string)
  * memory. If no parameter is provided, it returns the global memory.
  * Notice that, if only nodeScope is provided, this method will still
  * return the global memory.
+ * 翻译：检索上下文内存的内部方法。
+ * 如果提供了 treeScope 和 nodeScope，则此方法返回每个树内存的每个节点。
+ * 如果只提供了 treeScope，它会返回每棵树的内存。
+ * 如果未提供参数，则返回全局内存。
+ * 请注意，如果仅提供 nodeScope，此方法仍将返回全局内存
  *
  * @method _getMemory
  * @param {String} treeScope The id of the tree scope.
@@ -171,7 +207,11 @@ func (this *Blackboard) _getMemory(treeScope, nodeScope string) *Memory {
  * the value into the global memory. Notice that, if only nodeScope is
  * provided (but treeScope not), this method will still save the value into
  * the global memory.
- *
+ * 翻译：在黑板上存储一个值。
+ * 如果提供了 treeScope 和 nodeScope，则此方法会将值保存到每个树内存的每个节点中。
+ * 如果只提供了 treeScope，它会将值保存到每棵树的内存中。
+ * 如果没有提供参数，此方法会将值保存到全局内存中。
+ * 请注意，如果仅提供 nodeScope（但不提供 treeScope），此方法仍会将值保存到全局内存中。
  * @method set
  * @param {String} key The key to be stored.
  * @param {String} value The value to be stored.
@@ -210,6 +250,11 @@ func (this *Blackboard) _getTreeData(treeScope string) *TreeData {
  * retrieve from the global memory. If only nodeScope is provided (but
  * treeScope not), this method will still try to retrieve from the global
  * memory.
+ * 翻译: 检索黑板上的值。
+ * 如果提供了 treeScope 和 nodeScope，则此方法将从每个树内存的每个节点中检索值。
+ * 如果只提供了 treeScope，它将从每棵树的内存中检索值。
+ * 如果没有提供参数，此方法将从全局内存中检索。
+ * 如果只提供 nodeScope（但不提供 treeScope），此方法仍会尝试从全局内存中检索。
  *
  * @method get
  * @param {String} key The key to be retrieved.
