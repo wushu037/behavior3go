@@ -16,7 +16,7 @@ type IBaseWrapper interface {
 	_exit(tick *Tick)
 }
 type IBaseNode interface {
-	IBaseWrapper
+	IBaseWrapper // worker接口的包装接口。写为匿名字段，作用只是在形式上为其接口"分组"
 
 	Ctor()
 	Initialize(params *BTNodeCfg)
@@ -165,7 +165,7 @@ func (this *BaseNode) _execute(tick *Tick) b3.Status {
 	// ENTER
 	this._enter(tick)
 
-	// OPEN
+	// OPEN，已经处于open状态的节点(Running状态的节点)不会在本次再执行open
 	if !tick.Blackboard.GetBool("isOpen", tick.tree.id, this.id) {
 		// _open会将本节点的isOpen标记为true，并执行每个节点的Open方法
 		this._open(tick)
