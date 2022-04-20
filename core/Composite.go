@@ -57,6 +57,8 @@ func (this *Composite) GetChild(index int) IBaseNode {
 func (this *Composite) AddChild(child IBaseNode) {
 	this.children = append(this.children, child)
 }
+
+// note: 根本没有地方调用 -.-
 func (this *Composite) tick(tick *Tick) b3.Status {
 	fmt.Println("tick Composite1")
 	return b3.ERROR
