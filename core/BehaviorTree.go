@@ -312,7 +312,7 @@ func (this *BehaviorTree) Tick(target interface{}, blackboard *Blackboard) b3.St
 
 	// todo 可运行`memsubtree/main.go`触发以下逻辑进行分析
 	// 通过上面的打印分析得出：
-	//  类似这样的一个树结构：一个子树st被主树的两个分支a、b调用。
+	//  类似这样的一个树结构：一个子树st(subtree)被主树的两个分支a、b调用。
 	// 	若本次tick通过分支a进入st，上次tick通过分支b进入st
 	//  则上次tick造成的st中的running节点就要被关闭(running节点存在于openNodes中)。
 	//  这相当于为本次tick要用到st做了初始化
@@ -322,7 +322,6 @@ func (this *BehaviorTree) Tick(target interface{}, blackboard *Blackboard) b3.St
 	//		- 在常规需求中我们应该更想这样：a分支下的st节点和b分支下的st节点，应该是两套节点，他们的内存应该是分开的。可以给子树节点id依据分支加上不同的前缀
 	//
 	// 冗余的触发情况：本次tick没有openNodes，上次tick有，但上次tick的openNodes在本次tick运行时已经被正常close了，也会再触发这里的close，这显然是多余的
-
 
 	// 填充黑板数据
 	// 本次tick的openNodes保存到黑板中在下次tick时使用

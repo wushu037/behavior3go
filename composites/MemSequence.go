@@ -15,6 +15,7 @@ type MemSequence struct {
  * @param {b3.Tick} tick A tick instance.
 **/
 func (this *MemSequence) OnOpen(tick *Tick) {
+	// 设置默认值0，OnTick时取出从0开始执行
 	tick.Blackboard.Set("runningChild", 0, tick.GetTree().GetID(), this.GetID())
 }
 
