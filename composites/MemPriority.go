@@ -30,7 +30,7 @@ func (this *MemPriority) OnTick(tick *Tick) b3.Status {
 	for i := child; i < this.GetChildCount(); i++ {
 		var status = this.GetChild(i).Execute(tick)
 
-		if status != b3.FAILURE { // note：如果是status==ERROR，也会继续下一次循环执行下一个节点，这不对吧(或者我没有理解ERROR的用法？我以为出现ERROR就终止树运行)
+		if status != b3.FAILURE { // i note：如果是status==ERROR，也会继续下一次循环执行下一个节点，这不对吧(或者我没有理解ERROR的用法？我以为出现ERROR就终止树运行)
 			if status == b3.RUNNING {
 				tick.Blackboard.Set("runningChild", i, tick.GetTree().GetID(), this.GetID())
 			}

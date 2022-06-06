@@ -28,7 +28,8 @@ type IAction interface {
 **/
 type Action struct {
 	BaseNode
-	// BaseNode 里已经有 IBaseWorker 了，为什么这里还要声明？因为IBaseWorker的值其实就是这个BaseWorker，IBaseWorker的方法最终就是这个BaseWorker提供的。
+	// i note:
+	// BaseNode 里已经有 IBaseWorker 了，为什么这里还要声明？因为IBaseWorker的值其实就是这个BaseWorker，IBaseWorker的方法最终就是这个BaseWorker提供的
 	// 这里的BaseWorker才是真正有效的内存/数据，而IBaseWorker如果不赋值的话只是个nil
 	BaseWorker
 }
