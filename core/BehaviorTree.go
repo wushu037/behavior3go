@@ -196,7 +196,8 @@ func (this *BehaviorTree) Load(data *config.BTTreeCfg, maps *b3.RegisterStructMa
 		// i note:
 		// node.(IBaseWorker) 得到的是 node.BaseWorker (如Action.BaseNode、Composite.BaseNode、Condition.BaseNode)
 		// 它们作为(Action/Composite/Condition)的struct类型成员变量，在声明时都已经有值。而此处就是赋值
-		// > 实际上也可以在node.Initialize中直接赋值，不需要声明为成员变量
+		// > 在这里取node.(IBaseWorker)进行赋值最方便，符合封装思想。
+		// > 另一种赋值方式是，在每个具体node的Init中赋值。例如在log.Init中赋值，写法：`log.IBaseWorker = interface{}(log).(core.IBaseWorker)`
 		node.SetBaseNodeWorker(node.(IBaseWorker))
 		nodes[id] = node
 	}
